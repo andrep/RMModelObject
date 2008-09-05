@@ -1,0 +1,287 @@
+RMModelObject
+=============
+
+_RMModelObject_ is a class that makes writing model objects and [value
+objects](http://c2.com/cgi/wiki?ValueObject) in Cocoa a lot easier.  Let's walk
+through a short example: say you're writing a new blogging program, and want
+a class that represents a blog entry.  So, you start by writing a class that
+looks like this:
+
+    @interface MyBlogEntry : NSObject
+    {
+        NSString* title;
+        NSCalendarDate* postedDate;
+        NSAttributedString* bodyText;
+        NSArray* tagNames;
+        NSArray* categoryNames;
+        BOOL isDraft;
+    }
+
+    @property (copy) NSString* title;
+    @property (copy) NSCalendarDate* postedDate;
+    @property (copy) NSAttributedString* bodyText;
+    @property (copy) NSArray* tagNames;
+    @property (copy) NSArray* categoryNames;
+    @property BOOL isDraft;
+
+    @end
+
+Then you remember that Apple had written some [documentation about model
+objects](http://developer.apple.com/documentation/Cocoa/Conceptual/ModelObjects/)
+and go to read it, and become sad as you realise that you then really should write the following methods:
+
+* The accessors: `-title`, `-setTitle:`, `-postedDate`, `-setPostedDate:`,
+  `-bodyText`, `-setBodyText:`, `-tagNames`, `-setTagNames:`, `-categoryNames`,
+  `-setCategoryNames:`, `-isDraft`, `-setIsDraft:`.
+* `-isEqual:`, so that you can actually compare blog entries.
+* `-hash`, because you just wrote `-isEqual:`.
+* `-copyWithZone:`, because you'd like to duplicate the blog entry.
+* `-encodeWithCoder:` and `-initWithCoder:`, because `NSCoding` support is
+  pretty handy for being able to, say, copy'n'paste the thing to the clipboard.
+  Don't forget to support both keyed and unkeyed archiving!
+* `-dealloc`, to tidy up nicely.
+
+Not so much fun now, is it?  Not only is that a lot of extra code to write, but
+you've done it (maybe literally) hundreds of times before.  It's really boring
+code to write, and you should probably go write a test suite for it even though
+that's even more boring.
+
+Objective-C 2.0 makes at least the accessor pain go away by giving you
+`@synthesize`, but that's it.  If you're truly a modern runtime ninja and
+cutting 64-bit Objective-C 2.0 code, you can even get away without declaring
+those pesky instance variables, but again, you still have to write the other
+six methods.
+
+However, now that you've encountered RMModelObject, what's what you need to do
+to write a full-fledged model object with full support for `NSCopying` and
+`NSCoding`:
+
+    @interface MyBlogEntry : RMModelObject
+
+    @property (copy) NSString* title;
+    @property (copy) NSCalendarDate* postedDate;
+    @property (copy) NSAttributedString* bodyText;
+    @property (copy) NSArray* tagNames;
+    @property (copy) NSArray* categoryNames;
+    @property BOOL isDraft;
+
+    @end
+    
+    //
+    
+    @implementation MyBlogEntry
+
+    @dynamic title, postedDate, bodyText, tagNames, categoryNames, isDraft;
+
+    @end
+
+That's it.  (And you only need the @dynamic to suppress a compiler warning,
+hmpf.)  The RMModelObject superclass does the rest.  In summary, RMModelObject
+means:
+
+* no need to declare instance variables,
+* no need to write accessor methods,
+* free NSCopying protocol support (`-copyWithZone:`),
+* free NSCoding protocol support (`-initWithCoder:`, `-encodeWithCoder:`),
+* free `-isEqual:` and -hash` implementation,
+* no need to write `-dealloc` in most cases.
+
+There's one handy extra feature: your class can adopt the
+_RMModelObjectPropertyChanging_ protocol, which means that it can receive
+callbacks when properties are changed, both before and after the change.
+Think of this as a poor man's KVO.  Here's the two methods that you want
+to implement:
+
+    @protocol RMModelObjectPropertyChanging
+
+    @optional
+
+    - (BOOL)propertyWillChange:(NSString*)propertyName from:(id)oldValue to:(id)newValue;
+    - (void)propertyDidChange:(NSString*)propertyName from:(id)oldValue to:(id)newValue;
+
+    @end
+
+Hopefully the method names are explanatory enough; see the comments in
+RMModelObject.h for more information.
+
+There's also a couple of other nice characteristics of RMModelObject that make
+it appealing:
+
+* The RMModelObject base class does not have any extra instance variables, so
+  it doesn't change the memory layout of your class and therefore retains full
+  ABI compatibility, making it easy to try out.
+* For the 32-bit runtime, since you're not using instance variables in your
+  class, you are not susceptible to the [fragile base
+  class](http://cocoacafe.wordpress.com/2007/06/20/the-fragile-base-class-problem/)
+  problem.
+
+You can probably stop reading here and start playing right now, that's
+really all you need to know about it.  Hopefully you'll find it useful!
+The rest of this document is a high-level overview about how those six
+main features work.
+
+
+Implementation Overview
+-----------------------
+
+RMModelObject uses a lot of the [Objective-C 2.0
+runtime](http://developer.apple.com/documentation/Cocoa/Reference/ObjCRuntimeRef/index.html)
+facilities to do its voodoo.  If you've written a RMModelObject subclass named
+`Foo`, RMModelObject essentially [introspects the
+properties](http://developer.apple.com/documentation/Cocoa/Conceptual/ObjectiveC/Articles/chapter_5_section_6.html)
+of Foo, and uses that introspected data to dynamically create a new class at
+runtime that has a backing store for those properties with appropriate getter and setter
+methods.
+
+By overriding `+allocWithZone:`, we make the instances of your class to really
+be instances of this dynamically generated class, which is named
+`RMModelObject_Foo`.  So, the final class hierarchy for an instance of the
+`Foo` class looks like
+
+      RMModelObject    implements NSCopying, NSCoding, -isEqual: & hash
+            ^ 
+            |
+           Foo
+            ^
+            |
+    RMModelObject_Foo  implements accessors and backing store
+
+So, RMModelObject_Foo inherits from Foo, which inherits from RMModelObject.
+There's a division of responsibility here: the `RMModelObject_*` classes
+implement the accessor methods that are specific to a particular class, which
+means that they are also somehow responsible for implementing the storage
+(backing store) for the accessors.  Probably the most complex logic in the
+RMModelObject implementation is allocating and registering the dynamically
+generated class, while the most tricky (but not too complex) code is the actual
+accessor methods themselves, because there must be one getter and setter for
+each primitive C type.  Objective-C lets you dynamically add methods to
+a class, but those methods require implementations, and those implementations
+aren't generated dynamically generated.  (Yet!)
+
+The RMModelObject base class then handles the methods that are common to all
+model objects, which are `-copyWithZone:`, `-encodeWithCoder:`,
+`-initWithCoder:`, `isEqual:` and `hash`.  Since `self` in Objective-C always
+points to the most-derived class, it's no problem for the RMModelObject base
+class to introspect its subclass's properties.
+
+
+Property Access & Performance
+-----------------------------
+
+Each property that you declare obviously has to have its value stored
+somewhere in memory.  The main goal that I had for this was performance:
+property access had to be fast enough so that you wouldn't have to think
+about whether using RMModelObject would slow you down or not.
+
+This implementation is actually in its third generation: I'd rewritten
+RMModelObject twice before with all the same capabilities, but performance
+was slow enough in the first two versions that accessing properties in
+tight loops took up a very significant amount of time in a Shark profile.
+The very first version used a simple NSDictionary ivar to store all the
+property values.  This worked fine, but killed performance because you
+suffered two more levels of indirection: one pointer dereference from the
+model object to the dictionary, and another pointer dereference from the
+dictionary to the value.  Additionally, if the property was a primitive
+value (e.g. an `unsigned int` or `BOOL`), which is very common for many
+value objets, there was the extra overhead of wrapping and unwrapping that
+value in an `NSNumber` or `NSValue` structure.  The performance impact was
+unacceptable.
+
+The second version used a C++ STL `std::map` with a high-performance
+[dynamic-typing value
+store](http://www.codeproject.com/KB/cpp/dynamic_typing.aspx) to improve
+speed: small values such as pointers and integers could be stored directly
+in the map, eliminating one pointer dereference.  Unfortunately, since STL
+maps are typically red-black tree implementations, there was still
+a significant performance overhead due to pointer dereferencing.
+Additionally, the implementation was very complex: trying to intermix
+Objective-C's dynamic typing with C++ templates while trying to maintain
+correct assign/retain/copy semantics for properties was very difficult.
+
+Ideally, what I was after was a single contiguous area of memory: a simple
+array that I could index into at will, just like the classic ivar layout
+of a class or struct.  We could pre-declare a reasonable-sized fixed-size
+array to play with, but Since RMModelObject had to be flexible enough to
+accommodate model objects big and small, that array would have to grow for
+large objects, and could waste a lot of memory for small objects, so
+I didn't find that solution acceptable.
+
+Then, duh, I remmbered that the Objective-C runtime lets you dynamically
+create a class, and one can add instance variables to it and even get
+their offsets using a name.  Perfect!  So, the current implementation
+simply uses the Objective-C runtime to do all the heavy lifting.  This
+gives us a few nice features.  First, if the Objective-C runtime improves
+its dynamic ivar access speed in the future, RMModelObject will benefit
+from it.  Second, our implementation becomes simpler since we can push all
+that work down the stack.  Third, I'm reasonably sure that this is
+more-or-less how the 64-bit runtime works for its non-fragile ivar
+support, so we can claim to be around the same performance as that, which
+not only perfectly acceptable, it means that we're comparable in speed to
+what will hopefully be the standard way of doing things in the future.
+
+
+Generated Accessor Methods
+--------------------------
+
+RMModelObject generates a getter and setter method for all primitive
+types, as well the four main struct types used in Cocoa
+(`NSRect`/`CGRect`, `NSPoint`/`CGPoint`, `NSSize`/`CGSize`, and
+`NSRange`).  Right now, there's no way to extend that list besides hacking
+the source code, though future versions of RMModelObject will have an API
+to extend this.  One pair of getter and setter methods are generated for
+each property.  The getter/setter calls into a C++ template function
+(templatised over the property name) to do the actual setting of the
+instance variable.  Due to the Objective-C runtime having buggy
+implementations of `object_getIvar()` and `object_setIvar()`, the accessor
+methods calculate the ivar offset with `ivar_getOffset()` for the
+read/write, and read directly from that offset.  For `id` (object) types,
+we use `objc_assign_ivar()` so that garbage collection is properly
+supported.
+
+For each setter method, there's also a "slow" version and a "fast"
+version.  When the dynamic class is registered, RMModelObject will check
+whether your class implements the `-propertyWillChange:from:to:` or
+`-propertyDidChange:from:to:` methods.  If it implements either of those
+methods, the slow version is used; if not, the fast version is used.
+
+
+TODO
+----
+
+There's certainly a lot of improvement that can be made to RMModelObject.
+* Support for __weak instance variables
+* API to extend support for various types
+* "Functional programming style" updater setter methods, that return a new
+  copy of the current object.  (e.g. -updatingFoo: rather than -setFoo:).
+* Copy-on-write support
+* Automatic undo support
+* Custom setter/getter names for property
+* Properly support atomic/nonatomic properties
+* Extend unit tests to cover all types
+* Support copying/archiving of pointer types (void*/char*), perhaps via a delegate method
+* General code organisation: it's pretty untidy right now.
+
+
+Closing Remarks
+---------------
+
+I've found RMModelObject to be tremendously useful so far: it's already
+been used for well over a dozen classes so far and has cut down on both
+a ton of tedious work and development time, making it trivial to create
+proper model objects instead of using cheap hacks, such as a struct or an
+NSDictionary with named keys.  (The latter provides you with no
+encapsulation.)  One of our large model object classes had over
+1000 lines eliminated thanks to the `-propertyWillChange:from:to:` and
+`-propertyDidChange:from:to:` methods.  Additionally, since all the logic
+to perform the copying and archiving of model objects is contained in one
+place, it's also cut down on the number of bugs.
+
+I hope it's useful to you, and if you feel like contributing back to it,
+please feel free to contact me for write access to the Realmac Forge
+Subversion repository, I'm very happy to give out commit bits.  (If
+there's enough demand, maybe I'll move it to github some day.)
+
+> [Andre Pang](andre.pang@realmacsoftware.com)
+
+/* vim: set sts=4 expandtab */
+

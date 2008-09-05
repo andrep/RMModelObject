@@ -1,0 +1,226 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7B64C0370E61438700E4D136 /* RMModelObjectTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 7B64C01D0E61430100E4D136 /* RMModelObjectTest.m */; };
+		7B64C0390E61438900E4D136 /* RMModelObject.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7B64C01B0E61429C00E4D136 /* RMModelObject.mm */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		7B64C01A0E61429C00E4D136 /* RMModelObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMModelObject.h; sourceTree = "<group>"; };
+		7B64C01B0E61429C00E4D136 /* RMModelObject.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RMModelObject.mm; sourceTree = "<group>"; };
+		7B64C01D0E61430100E4D136 /* RMModelObjectTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMModelObjectTest.m; sourceTree = "<group>"; };
+		7B64C0300E61438200E4D136 /* RMModelObjectTest.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RMModelObjectTest.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7B64C0320E61438200E4D136 /* RMModelObjectTest-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RMModelObjectTest-Info.plist"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7B64C02D0E61438200E4D136 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		7B64C00D0E61428C00E4D136 = {
+			isa = PBXGroup;
+			children = (
+				7B64C01A0E61429C00E4D136 /* RMModelObject.h */,
+				7B64C01D0E61430100E4D136 /* RMModelObjectTest.m */,
+				7B64C01B0E61429C00E4D136 /* RMModelObject.mm */,
+				7B64C0310E61438200E4D136 /* Products */,
+				7B64C0320E61438200E4D136 /* RMModelObjectTest-Info.plist */,
+			);
+			sourceTree = "<group>";
+		};
+		7B64C0310E61438200E4D136 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7B64C0300E61438200E4D136 /* RMModelObjectTest.octest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		7B64C02F0E61438200E4D136 /* RMModelObjectTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7B64C0350E61438200E4D136 /* Build configuration list for PBXNativeTarget "RMModelObjectTest" */;
+			buildPhases = (
+				7B64C02B0E61438200E4D136 /* Resources */,
+				7B64C02C0E61438200E4D136 /* Sources */,
+				7B64C02D0E61438200E4D136 /* Frameworks */,
+				7B64C02E0E61438200E4D136 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RMModelObjectTest;
+			productName = RMModelObjectTest;
+			productReference = 7B64C0300E61438200E4D136 /* RMModelObjectTest.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7B64C00F0E61428C00E4D136 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 7B64C0120E61428C00E4D136 /* Build configuration list for PBXProject "RMModelObject" */;
+			compatibilityVersion = "Xcode 2.4";
+			hasScannedForEncodings = 0;
+			mainGroup = 7B64C00D0E61428C00E4D136;
+			productRefGroup = 7B64C0310E61438200E4D136 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				7B64C02F0E61438200E4D136 /* RMModelObjectTest */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7B64C02B0E61438200E4D136 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7B64C02E0E61438200E4D136 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7B64C02C0E61438200E4D136 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B64C0370E61438700E4D136 /* RMModelObjectTest.m in Sources */,
+				7B64C0390E61438900E4D136 /* RMModelObject.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		7B64C0100E61428C00E4D136 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Debug;
+		};
+		7B64C0110E61428C00E4D136 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+			};
+			name = Release;
+		};
+		7B64C0330E61438200E4D136 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "ppc i386 ppc64 x86_64";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Cocoa.framework/Headers/Cocoa.h";
+				GCC_PREPROCESSOR_DEFINITIONS = "NS_BUILD_32_LIKE_64=1";
+				INFOPLIST_FILE = "RMModelObjectTest-Info.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Cocoa,
+					"-framework",
+					SenTestingKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = RMModelObjectTest;
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		7B64C0340E61438200E4D136 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "ppc i386 ppc64 x86_64";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = "$(DEVELOPER_LIBRARY_DIR)/Frameworks";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Cocoa.framework/Headers/Cocoa.h";
+				GCC_PREPROCESSOR_DEFINITIONS = "NS_BUILD_32_LIKE_64=1";
+				INFOPLIST_FILE = "RMModelObjectTest-Info.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Cocoa,
+					"-framework",
+					SenTestingKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = RMModelObjectTest;
+				WRAPPER_EXTENSION = octest;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7B64C0120E61428C00E4D136 /* Build configuration list for PBXProject "RMModelObject" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B64C0100E61428C00E4D136 /* Debug */,
+				7B64C0110E61428C00E4D136 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7B64C0350E61438200E4D136 /* Build configuration list for PBXNativeTarget "RMModelObjectTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B64C0330E61438200E4D136 /* Debug */,
+				7B64C0340E61438200E4D136 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7B64C00F0E61428C00E4D136 /* Project object */;
+}
