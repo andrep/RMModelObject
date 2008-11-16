@@ -428,7 +428,7 @@ std::string StripDoubleQuotes(const char* const s)
 	{
 		if(*p == '"') insideDoubleQuotes = !insideDoubleQuotes;
 		
-		if(!insideDoubleQuotes) stripped.append(1, *p);
+		if(!insideDoubleQuotes && (*p != '"')) stripped.append(1, *p);
 	}
 	
 	return stripped;
@@ -943,6 +943,87 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 }
 
 #pragma mark NSObject
+
+- (NSString *)description
+{
+	NSMutableString * description = [NSMutableString string];
+	[description appendFormat:@"<%@ %p: ", [[self superclass] className], self];
+	NSString * separator = @"\n	   ";
+	FOR_ALL_IVARS(ivar, self)
+	{
+		const char* ivarName = ivar_getName(ivar);
+		
+		objc_property_t property = class_getProperty([self class], ivarName);
+		if(property == NULL) continue;
+		
+		const ptrdiff_t ivarOffset = ivar_getOffset(ivar);
+		
+		MOLog(@"about to describe %s (offset=%ld)...", ivarName, ivarOffset);
+		
+		// We assume that the property to inspect is of type id: if it isn't, it doesn't matter anyway since we figure out the real size of the object using NSGetSizeAndAlignment() and do an approprate memcmp.  If it's a proper id, it simplifies the code a bit since we don't need to cast void*'s to ids.
+		id* ivarLocation = reinterpret_cast<id*>( (char*)self+ivarOffset );
+		
+		const char* const ivarTypeEncoding = ivar_getTypeEncoding(ivar);
+		NSString * format = nil;
+		switch(ivarTypeEncoding[0])
+		{
+			case _C_ID:
+			{
+				id o = (id)*ivarLocation;
+				if ([o respondsToSelector:@selector(descriptionWithLocale:indent:)])
+					[description appendFormat:@"%@%s = %@", separator, ivarName, [o descriptionWithLocale:nil indent:1]];
+				else
+					[description appendFormat:@"%@%s = %@", separator, ivarName, o];
+				break;
+			}
+			case _C_INT:	format = @"%i"; break;
+			case _C_UINT:	format = @"%u"; break;
+			case _C_SHT:	format = @"%hi"; break;
+			case _C_USHT:	format = @"%hu"; break;
+			case _C_LNG:	format = @"%li"; break;
+			case _C_ULNG:	format = @"%lu"; break;
+			case _C_CHR:	format = @"%hhi"; break;
+			case _C_UCHR:	format = @"%hhu"; break;
+			case _C_LNG_LNG:	format = @"%lli"; break;
+			case _C_ULNG_LNG:	format = @"%llu"; break;
+			case _C_FLT:	format = @"%f"; break;
+			case _C_DBL:	format = @"%f"; break;
+			case _C_STRUCT_B:
+				if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSRect)) == 0)
+				{
+					[description appendFormat:@"%@%s = (rect) %@", separator, ivarName, NSStringFromRect(*(NSRect *)ivarLocation)];
+					break;
+				}
+				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSSize)) == 0)
+				{
+					[description appendFormat:@"%@%s = (size) %@", separator, ivarName, NSStringFromSize(*(NSSize *)ivarLocation)];
+					break;
+				}
+				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSPoint)) == 0)
+				{
+					[description appendFormat:@"%@%s = (point) %@", separator, ivarName, NSStringFromPoint(*(NSPoint *)ivarLocation)];
+					break;
+				}
+				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSRange)) == 0)
+				{
+					[description appendFormat:@"%@%s = (range) %@", separator, ivarName, NSStringFromRange(*(NSRange *)ivarLocation)];
+					break;
+				}
+			default:
+				[description appendFormat:@"%@%s = ?", separator, ivarName];
+				break;
+		}
+		
+		if (format != nil)
+		{
+			[description appendFormat:@"%@%s = ", separator, ivarName];
+			[description appendFormat:format, *ivarLocation];
+		}
+		separator = @"\n	";
+	}
+	[description appendFormat:@">"];
+	return description;
+}	 
 
 - (BOOL)isEqual:(id)other
 {
