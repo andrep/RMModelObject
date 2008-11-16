@@ -944,16 +944,19 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 
 #pragma mark NSObject
 
-- (NSString *)description
+- (NSString*)description
 {
-	NSMutableString * description = [NSMutableString string];
+	NSMutableString* const description = [NSMutableString string];
+	
 	[description appendFormat:@"<%@ %p: ", [[self superclass] className], self];
-	NSString * separator = @"\n	   ";
+	
+	NSString* separator = @"\n	   ";
+	
 	FOR_ALL_IVARS(ivar, self)
 	{
-		const char* ivarName = ivar_getName(ivar);
+		const char* const ivarName = ivar_getName(ivar);
 		
-		objc_property_t property = class_getProperty([self class], ivarName);
+		objc_property_t const property = class_getProperty([self class], ivarName);
 		if(property == NULL) continue;
 		
 		const ptrdiff_t ivarOffset = ivar_getOffset(ivar);
@@ -964,16 +967,16 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 		id* ivarLocation = reinterpret_cast<id*>( (char*)self+ivarOffset );
 		
 		const char* const ivarTypeEncoding = ivar_getTypeEncoding(ivar);
-		NSString * format = nil;
+		NSString* format = nil;
 		switch(ivarTypeEncoding[0])
 		{
 			case _C_ID:
 			{
-				id o = (id)*ivarLocation;
-				if ([o respondsToSelector:@selector(descriptionWithLocale:indent:)])
-					[description appendFormat:@"%@%s = %@", separator, ivarName, [o descriptionWithLocale:nil indent:1]];
+				id const object = (id)*ivarLocation;
+				if ([object respondsToSelector:@selector(descriptionWithLocale:indent:)])
+					[description appendFormat:@"%@%s = %@", separator, ivarName, [object descriptionWithLocale:nil indent:1]];
 				else
-					[description appendFormat:@"%@%s = %@", separator, ivarName, o];
+					[description appendFormat:@"%@%s = %@", separator, ivarName, object];
 				break;
 			}
 			case _C_INT:	format = @"%i"; break;
@@ -991,22 +994,22 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 			case _C_STRUCT_B:
 				if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSRect)) == 0)
 				{
-					[description appendFormat:@"%@%s = (rect) %@", separator, ivarName, NSStringFromRect(*(NSRect *)ivarLocation)];
+					[description appendFormat:@"%@%s = (rect) %@", separator, ivarName, NSStringFromRect(*(NSRect*)ivarLocation)];
 					break;
 				}
 				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSSize)) == 0)
 				{
-					[description appendFormat:@"%@%s = (size) %@", separator, ivarName, NSStringFromSize(*(NSSize *)ivarLocation)];
+					[description appendFormat:@"%@%s = (size) %@", separator, ivarName, NSStringFromSize(*(NSSize*)ivarLocation)];
 					break;
 				}
 				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSPoint)) == 0)
 				{
-					[description appendFormat:@"%@%s = (point) %@", separator, ivarName, NSStringFromPoint(*(NSPoint *)ivarLocation)];
+					[description appendFormat:@"%@%s = (point) %@", separator, ivarName, NSStringFromPoint(*(NSPoint*)ivarLocation)];
 					break;
 				}
 				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSRange)) == 0)
 				{
-					[description appendFormat:@"%@%s = (range) %@", separator, ivarName, NSStringFromRange(*(NSRange *)ivarLocation)];
+					[description appendFormat:@"%@%s = (range) %@", separator, ivarName, NSStringFromRange(*(NSRange*)ivarLocation)];
 					break;
 				}
 			default:
@@ -1014,14 +1017,16 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 				break;
 		}
 		
-		if (format != nil)
+		if(format != nil)
 		{
 			[description appendFormat:@"%@%s = ", separator, ivarName];
 			[description appendFormat:format, *ivarLocation];
 		}
 		separator = @"\n	";
 	}
+	
 	[description appendFormat:@">"];
+	
 	return description;
 }	 
 
