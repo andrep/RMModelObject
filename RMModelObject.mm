@@ -26,6 +26,7 @@
 #import "RMModelObject.h"
 
 #include <objc/runtime.h>
+#include <objc/objc-auto.h>
 
 #include <string>
 #include <vector>
@@ -174,7 +175,7 @@ struct ObjCPropertyAttributes
 static void FreeAndLog(void* p)
 {
 	MOLog(@"FreeAndLog(): %p", p);
-	
+
 	free(p);
 }
 
@@ -275,7 +276,7 @@ template<typename T> void SetRawValueSlow(id const self, SEL _cmd, T value)
 {
 	const char* const propertyName = PropertyNameFromSetterName([self class], _cmd);
 	
-	MOLog(@"-[%@ %s]: %s (%s)", [self className], _cmd, propertyName, __PRETTY_FUNCTION__);
+	MOLog(@"-[%@ %s]: %s (%s)", NSStringFromClass([self class]), _cmd, propertyName, __PRETTY_FUNCTION__);
 
 	Ivar const ivar = class_getInstanceVariable([self class], propertyName);
 	T oldValue;
@@ -646,7 +647,7 @@ static inline id RMAllocateObject(Class self, NSZone* zone)
 	id allocatedObject = NSAllocateObject(self, 0, zone);
 	if(allocatedObject == nil)
 	{
-		NSLog(@"NSAllocateObject(%@[%p], 0, %@) returned nil", [self className], self, zone);
+		NSLog(@"NSAllocateObject(%@[%p], 0, %@) returned nil", NSStringFromClass([self class]), self, zone);
 		
 		return nil;
 	}
@@ -677,7 +678,7 @@ static BOOL inline RMClassAddMethod(Class cls, SEL name, IMP imp, const char* ty
 
 Class RMModelObjectInitializeDynamicClass(Class self)
 {
-	NSString* className = [self className];
+	NSString* className = NSStringFromClass([self class]);
 	
 	if([className hasPrefix:@"RMModelObject_"]) return objc_getClass([className UTF8String]);
 	   
@@ -775,7 +776,7 @@ Class RMModelObjectInitializeDynamicClass(Class self)
 {
 	FOR_ALL_IVARS(ivar, self)
 	{
-		MOLog(@"%@: deallocating %s...", [self className], ivar_getName(ivar));
+		MOLog(@"%@: deallocating %s...", NSStringFromClass([self class]), ivar_getName(ivar));
 		if(ivar_getTypeEncoding(ivar)[0] == _C_ID) [self setValue:nil forKey:[NSString stringWithUTF8String:ivar_getName(ivar)]];
 	}
 	
@@ -784,9 +785,10 @@ Class RMModelObjectInitializeDynamicClass(Class self)
 
 #pragma mark NSCopying
 
-static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
+static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL mutableCopy)
 {
-	id copiedObject = [[[self class] alloc] init];
+	if (!copiedObject)
+		copiedObject = [[[self class] alloc] init];
 	
 	MOLog(@"copied object size=%lu, self size=%lu", class_getInstanceSize([copiedObject class]), class_getInstanceSize([self class]));
 	
@@ -840,14 +842,19 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 	return copiedObject;
 }
 
+- (id)copyInto:(id)receiver withZone:(NSZone*)zone
+{
+	return CopyObjectInto(self, receiver, zone, NO);
+}
+
 - (id)copyWithZone:(NSZone*)zone
 {
-	return CopyObject(self, zone, NO);
+	return CopyObjectInto(self, nil, zone, NO);
 }
 
 - (id)mutableCopyWithZone:(NSZone*)zone
 {
-	return CopyObject(self, zone, YES);
+	return CopyObjectInto(self, nil, zone, YES);
 }
 
 #pragma mark NSCoding
@@ -887,7 +894,7 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 		
 		if(object == nil)
 		{
-			MOLog(@"-[%@ initWithCoder:]: unkeyed decoder doesn't have an initial object", [self className]);
+			MOLog(@"-[%@ initWithCoder:]: unkeyed decoder doesn't have an initial object", NSStringFromClass([self class]));
 			
 			[self release];
 			return nil;
@@ -896,7 +903,7 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 		NSDictionary* dictionary = [object isKindOfClass:[NSDictionary class]] ? (NSDictionary*)object : nil;
 		if(dictionary == nil)
 		{
-			MOLog(@"-[%@ initWithCoder:]: unkeyed decoder's initial object is not an NSDictionary", [self className]);
+			MOLog(@"-[%@ initWithCoder:]: unkeyed decoder's initial object is not an NSDictionary", NSStringFromClass([self class]));
 			
 			[self release];
 			return nil;
@@ -930,7 +937,7 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 		
 		id object = [self valueForKey:ivarNameString];
 		
-		MOLog(@"encoding property name %@: %@ (%@)", ivarNameString, object, [object className]);
+		MOLog(@"encoding property name %@: %@ (%@)", ivarNameString, object, NSStringFromClass([object class]));
 		
 		if(object)
 		{
@@ -948,7 +955,7 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 {
 	NSMutableString* const description = [NSMutableString string];
 	
-	[description appendFormat:@"<%@ %p: ", [[self superclass] className], self];
+	[description appendFormat:@"<%@ %p: ", NSStringFromClass([[self superclass] class]), self];
 	
 	NSString* separator = @"\n	   ";
 	
@@ -992,19 +999,19 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 			case _C_FLT:	format = @"%f"; break;
 			case _C_DBL:	format = @"%f"; break;
 			case _C_STRUCT_B:
-				if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSRect)) == 0)
+				if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(CGRect)) == 0)
 				{
-					[description appendFormat:@"%@%s = (rect) %@", separator, ivarName, NSStringFromRect(*(NSRect*)ivarLocation)];
+					[description appendFormat:@"%@%s = (rect) %@", separator, ivarName, NSStringFromCGRect(*(CGRect*)ivarLocation)];
 					break;
 				}
-				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSSize)) == 0)
+				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(CGSize)) == 0)
 				{
-					[description appendFormat:@"%@%s = (size) %@", separator, ivarName, NSStringFromSize(*(NSSize*)ivarLocation)];
+					[description appendFormat:@"%@%s = (size) %@", separator, ivarName, NSStringFromCGSize(*(CGSize*)ivarLocation)];
 					break;
 				}
-				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSPoint)) == 0)
+				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(CGPoint)) == 0)
 				{
-					[description appendFormat:@"%@%s = (point) %@", separator, ivarName, NSStringFromPoint(*(NSPoint*)ivarLocation)];
+					[description appendFormat:@"%@%s = (point) %@", separator, ivarName, NSStringFromCGPoint(*(CGPoint*)ivarLocation)];
 					break;
 				}
 				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSRange)) == 0)
@@ -1028,7 +1035,7 @@ static id CopyObject(id self, NSZone* zone, const BOOL mutableCopy)
 	[description appendFormat:@">"];
 	
 	return description;
-}	 
+}
 
 - (BOOL)isEqual:(id)other
 {
