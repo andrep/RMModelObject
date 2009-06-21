@@ -156,8 +156,8 @@ struct ObjCPropertyAttributes
 					break;
 				case ',':	// Property separator
 					break;
-				default:
-					NSCAssert2(NO, @"Encountered unknown property attribute character: %c (%s)", c, propertyAttributesCString);
+//				default:
+//					NSCAssert2(NO, @"Encountered unknown property attribute character: %c (%s)", c, propertyAttributesCString);
 			}
 		}
 	}
@@ -170,23 +170,17 @@ struct ObjCPropertyAttributes
 // The NewVariableName macro is needed even though it appears to not do anything, due to the how the C pre-processor works.
 #define NewVariableName(name, line) NewVariableNameInner(name, line)
 
-#define AUTO_FREE __attribute__((cleanup(FreeAndLog)))
-
-static void FreeAndLog(void* p)
-{
-	MOLog(@"FreeAndLog(): %p", p);
-
-	free(p);
-}
-
 /// Small macro to ease the burden of writing a for() loop to enumerate over all the instance variables in a class.  The first parameter is the name of the newly created ivar, and the second parameter is the object to check (typically just "ivar", and "self", respectively).
 #define FOR_ALL_IVARS(ivar, self) \
 	unsigned int NewVariableName(numberOfIvars, __LINE__) = 0; \
-	const Ivar* const NewVariableName(ivars, __LINE__) AUTO_FREE = class_copyIvarList([self class], &NewVariableName(numberOfIvars, __LINE__)); \
+	const Ivar* const NewVariableName(ivars, __LINE__) = class_copyIvarList([self class], &NewVariableName(numberOfIvars, __LINE__)); \
+	void *free_me_using_FREE_FOR_ALL = (void *)NewVariableName(ivars, __LINE__); \
 	NSUInteger NewVariableName(i, __LINE__) = 0; \
 	for(Ivar ivar = NewVariableName(ivars, __LINE__)[NewVariableName(i, __LINE__)]; \
         NewVariableName(i, __LINE__) < NewVariableName(numberOfIvars, __LINE__); \
         ivar = NewVariableName(ivars, __LINE__)[++NewVariableName(i, __LINE__)])
+
+#define FREE_FOR_ALL free(free_me_using_FREE_FOR_ALL)
 
 //***************************************************************************
 
@@ -693,11 +687,11 @@ Class RMModelObjectInitializeDynamicClass(Class self)
 	}
 	
 	unsigned numberOfProperties = 0;
-	objc_property_t* properties AUTO_FREE = class_copyPropertyList(self, &numberOfProperties);
-	
+	objc_property_t* properties = class_copyPropertyList(self, &numberOfProperties);
+
 	MOLog(@"RMModelObjectInitializeDynamicClass for self=%@ found %u properties", self, numberOfProperties);
 	
-	for(objc_property_t* property AUTO_FREE = properties;
+	for(objc_property_t* property = properties;
 		property < properties+numberOfProperties;
 		property++)
 	{
@@ -729,6 +723,7 @@ Class RMModelObjectInitializeDynamicClass(Class self)
 		if(!didAddIvar)
 		{
 			NSLog(@"class_addIvar failed for name=%s, typeEncoding=%s, size=%lu, alignment=%lu", propertyName, propertyTypeEncoding, propertySize, propertyAlignment);
+			free(properties);
 			return nil;
 		}
 		
@@ -741,6 +736,7 @@ Class RMModelObjectInitializeDynamicClass(Class self)
 		{
 			NSLog(@"snprintf() of %c%s: wrote %d characters, which is different from the buffer size of %zu-1",
 				  islower(propertyName[0]) ? toupper(propertyName[0]) : propertyName[0], propertyName+1, charactersPrinted, bufferSize);
+			free(properties);
 			return nil;
 		}
 		
@@ -769,17 +765,27 @@ Class RMModelObjectInitializeDynamicClass(Class self)
 
 	objc_registerClassPair(dynamicClass);
 	
+	free(properties);
 	return dynamicClass;
 }
 
 - (void)dealloc
 {
+	/*unsigned int numberOfIvars = 0;
+	Ivar* ivars = class_copyIvarList([self class], &numberOfIvars);
+	
+	for(const Ivar* p = ivars; p < ivars+numberOfIvars; p++)
+	{
+		Ivar const ivar = *p;
+	}*/
+	
 	FOR_ALL_IVARS(ivar, self)
 	{
 		MOLog(@"%@: deallocating %s...", NSStringFromClass([self class]), ivar_getName(ivar));
 		if(ivar_getTypeEncoding(ivar)[0] == _C_ID) [self setValue:nil forKey:[NSString stringWithUTF8String:ivar_getName(ivar)]];
 	}
 	
+	FREE_FOR_ALL;
 	[super dealloc];
 }
 
@@ -839,6 +845,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 	
 	// TODO: call [super copy]
 	
+	FREE_FOR_ALL;
 	return copiedObject;
 }
 
@@ -863,13 +870,13 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 {
 	MOLog(@"initWithCoder 1");
 	
-	self = [self init];
+	self = [super init];
 	if(self == nil) return nil;
 	
 	MOLog(@"initWithCoder 2");
 	
 	unsigned int numberOfIvars = 0;
-	const Ivar* const ivars AUTO_FREE = class_copyIvarList([self class], &numberOfIvars);
+	Ivar* ivars = class_copyIvarList([self class], &numberOfIvars);
 		
 	if([decoder allowsKeyedCoding])
 	{
@@ -881,7 +888,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 			
 			if([decoder containsValueForKey:ivarNameString])
 			{
-				id object = [[decoder decodeObjectForKey:ivarNameString] retain];
+				id object = [decoder decodeObjectForKey:ivarNameString];
 				[self setValue:object forKey:ivarNameString];
 				
 				MOLog(@"Setting object %p (%@) for key %@", object, object, ivarNameString);
@@ -897,6 +904,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 			MOLog(@"-[%@ initWithCoder:]: unkeyed decoder doesn't have an initial object", NSStringFromClass([self class]));
 			
 			[self release];
+			free(ivars);
 			return nil;
 		}
 		
@@ -906,6 +914,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 			MOLog(@"-[%@ initWithCoder:]: unkeyed decoder's initial object is not an NSDictionary", NSStringFromClass([self class]));
 			
 			[self release];
+			free(ivars);
 			return nil;
 		}
 		
@@ -923,6 +932,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 		}
 	}
 	
+	free(ivars);
 	return self;
 }
 
@@ -947,6 +957,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 	}
 	
 	if(![encoder allowsKeyedCoding]) [encoder encodeObject:encodingDictionary];
+	FREE_FOR_ALL;
 }
 
 #pragma mark NSObject
@@ -1034,6 +1045,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 	
 	[description appendFormat:@">"];
 	
+	FREE_FOR_ALL;
 	return description;
 }
 
@@ -1071,6 +1083,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 				{
 					MOLog(@"isEqual: for %s (type id) returned NO: src=%@, other=%@",
 						  ivarName, *sourceIvarLocation, *otherIvarLocation);
+					FREE_FOR_ALL;
 					return NO;
 				}
 				break;
@@ -1088,6 +1101,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 				if(memcmpResult != 0)
 				{
 					MOLog(@"isEqual: for %s (type %s) returned NO", ivarName, ivarTypeEncoding);
+					FREE_FOR_ALL;
 					return NO;
 				}
 				
@@ -1099,6 +1113,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 		MOLog(@"ivar %s passed equality check", ivarName);
 	}
 	
+	FREE_FOR_ALL;
 	return YES;
 }
 
@@ -1110,6 +1125,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 	
 	FOR_ALL_IVARS(ivar, self) hash += (NSUInteger)&ivar;
 	
+	FREE_FOR_ALL;
 	return hash;
 }
 
