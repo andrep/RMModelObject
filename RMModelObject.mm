@@ -1123,7 +1123,7 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 	
 	NSUInteger hash = 0;
 	
-	FOR_ALL_IVARS(ivar, self) hash += (NSUInteger)&ivar;
+	FOR_ALL_IVARS(ivar, self) hash += (NSUInteger)ivar;
 	
 	FREE_FOR_ALL;
 	return hash;
