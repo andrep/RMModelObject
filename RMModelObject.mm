@@ -472,10 +472,10 @@ int RMTypeEncodingCompare(const char* lhs, const char* rhs)
 				// _C_UNION_B
 				// _C_UNION_E
 			case _C_STRUCT_B:
-				if(RMTypeEncodingCompare(typeEncoding, @encode(CGRect) == 0)) return GetSetterMethod(self, @selector(_modelObjectSetCGRect:));
-				else if(RMTypeEncodingCompare(typeEncoding, @encode(CGSize) == 0)) return GetSetterMethod(self, @selector(_modelObjectSetCGSize:));
-				else if(RMTypeEncodingCompare(typeEncoding, @encode(CGPoint) == 0)) return GetSetterMethod(self, @selector(_modelObjectSetCGPoint:));
-				else if(RMTypeEncodingCompare(typeEncoding, @encode(NSRange) == 0)) return GetSetterMethod(self, @selector(_modelObjectSetNSRange:));
+				if(RMTypeEncodingCompare(typeEncoding, @encode(CGRect)) == 0) return GetSetterMethod(self, @selector(_modelObjectSetCGRect:));
+				else if(RMTypeEncodingCompare(typeEncoding, @encode(CGSize)) == 0) return GetSetterMethod(self, @selector(_modelObjectSetCGSize:));
+				else if(RMTypeEncodingCompare(typeEncoding, @encode(CGPoint)) == 0) return GetSetterMethod(self, @selector(_modelObjectSetCGPoint:));
+				else if(RMTypeEncodingCompare(typeEncoding, @encode(NSRange)) == 0) return GetSetterMethod(self, @selector(_modelObjectSetNSRange:));
 				// _C_STRUCT_E
 				// _C_VECTOR
 				// _C_CONST
@@ -513,10 +513,10 @@ int RMTypeEncodingCompare(const char* lhs, const char* rhs)
 				// _C_UNION_B
 				// _C_UNION_E
 			case _C_STRUCT_B:
-				if(RMTypeEncodingCompare(typeEncoding, @encode(CGRect) == 0)) return class_getInstanceMethod(self, @selector(_modelObjectGetCGRect));
-				else if(RMTypeEncodingCompare(typeEncoding, @encode(CGSize) == 0)) return class_getInstanceMethod(self, @selector(_modelObjectGetCGSize));
-				else if(RMTypeEncodingCompare(typeEncoding, @encode(CGPoint) == 0)) return class_getInstanceMethod(self, @selector(_modelObjectGetCGPoint));
-				else if(RMTypeEncodingCompare(typeEncoding, @encode(NSRange) == 0)) return class_getInstanceMethod(self, @selector(_modelObjectGetNSRange));
+				if(RMTypeEncodingCompare(typeEncoding, @encode(CGRect)) == 0) return class_getInstanceMethod(self, @selector(_modelObjectGetCGRect));
+				else if(RMTypeEncodingCompare(typeEncoding, @encode(CGSize)) == 0) return class_getInstanceMethod(self, @selector(_modelObjectGetCGSize));
+				else if(RMTypeEncodingCompare(typeEncoding, @encode(CGPoint)) == 0) return class_getInstanceMethod(self, @selector(_modelObjectGetCGPoint));
+				else if(RMTypeEncodingCompare(typeEncoding, @encode(NSRange)) == 0) return class_getInstanceMethod(self, @selector(_modelObjectGetNSRange));
 				// _C_STRUCT_E
 				// _C_VECTOR
 				// _C_CONST
