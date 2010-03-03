@@ -689,6 +689,10 @@ Class RMModelObjectInitializeDynamicClass(Class self)
 	unsigned numberOfProperties = 0;
 	objc_property_t* properties = class_copyPropertyList(self, &numberOfProperties);
 
+	if (numberOfProperties == 0)
+		@throw [NSException exceptionWithName:@"InvalidClassException" reason:
+				[NSString stringWithFormat:@"You must define at least one dynamic property on the RMModelObject class \"%@\" (or it will just crash anyway)", className] userInfo:nil];
+	
 	MOLog(@"RMModelObjectInitializeDynamicClass for self=%@ found %u properties", self, numberOfProperties);
 	
 	for(objc_property_t* property = properties;
