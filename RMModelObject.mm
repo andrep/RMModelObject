@@ -1038,7 +1038,13 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 		if(format != nil)
 		{
 			[description appendFormat:@"%@%s = ", separator, ivarName];
-			[description appendFormat:format, *ivarLocation];
+			
+			if (ivarTypeEncoding[0] == _C_FLT)
+				[description appendFormat:format, *((float*)ivarLocation)]; // else you get 0.0000000
+			else if (ivarTypeEncoding[0] == _C_DBL)
+				[description appendFormat:format, *((double*)ivarLocation)]; // else you get 0.0000000
+			else
+				[description appendFormat:format, *ivarLocation];
 		}
 		separator = @"\n	";
 	}
