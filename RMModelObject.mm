@@ -1016,17 +1016,17 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 			case _C_STRUCT_B:
 				if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(CGRect)) == 0)
 				{
-					[description appendFormat:@"%@%s = (rect) %@", separator, ivarName, NSStringFromCGRect(*(CGRect*)ivarLocation)];
+					[description appendFormat:@"%@%s = (rect) %@", separator, ivarName, NSStringFromRect(NSRectFromCGRect(*(CGRect*)ivarLocation))];
 					break;
 				}
 				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(CGSize)) == 0)
 				{
-					[description appendFormat:@"%@%s = (size) %@", separator, ivarName, NSStringFromCGSize(*(CGSize*)ivarLocation)];
+					[description appendFormat:@"%@%s = (size) %@", separator, ivarName, NSStringFromSize(NSSizeFromCGSize(*(CGSize*)ivarLocation))];
 					break;
 				}
 				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(CGPoint)) == 0)
 				{
-					[description appendFormat:@"%@%s = (point) %@", separator, ivarName, NSStringFromCGPoint(*(CGPoint*)ivarLocation)];
+					[description appendFormat:@"%@%s = (point) %@", separator, ivarName, NSStringFromPoint(NSPointFromCGPoint(*(CGPoint*)ivarLocation))];
 					break;
 				}
 				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSRange)) == 0)
