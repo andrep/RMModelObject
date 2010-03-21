@@ -39,6 +39,25 @@ BOOL RMModelObjectDebuggingEnabled = NO;
 
 //***************************************************************************
 
+#if !defined(TARGET_OS_IPHONE) || TARGET_OS_IPHONE == 0
+static inline NSString* NSStringFromCGRect(const CGRect rect)
+{
+	return NSStringFromRect(NSRectFromCGRect(rect));
+}
+
+static inline NSString* NSStringFromCGSize(const CGSize size)
+{
+	return NSStringFromSize(NSSizeFromCGSize(size));
+}
+
+static inline NSString* NSStringFromCGPoint(const CGPoint point)
+{
+	return NSStringFromPoint(NSPointFromCGPoint(point));
+}
+#endif
+
+//***************************************************************************
+
 typedef char ObjCPropertyAssignmentMode;
 static const char ObjCPropertyAssignmentModeAssign = '\0';
 static const char ObjCPropertyAssignmentModeRetain = '&';
@@ -1016,17 +1035,17 @@ static id CopyObjectInto(id self, id copiedObject, NSZone* zone, const BOOL muta
 			case _C_STRUCT_B:
 				if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(CGRect)) == 0)
 				{
-					[description appendFormat:@"%@%s = (rect) %@", separator, ivarName, NSStringFromRect(NSRectFromCGRect(*(CGRect*)ivarLocation))];
+					[description appendFormat:@"%@%s = (rect) %@", separator, ivarName, NSStringFromCGRect(*(CGRect*)ivarLocation)];
 					break;
 				}
 				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(CGSize)) == 0)
 				{
-					[description appendFormat:@"%@%s = (size) %@", separator, ivarName, NSStringFromSize(NSSizeFromCGSize(*(CGSize*)ivarLocation))];
+					[description appendFormat:@"%@%s = (size) %@", separator, ivarName, NSStringFromCGSize(*(CGSize*)ivarLocation)];
 					break;
 				}
 				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(CGPoint)) == 0)
 				{
-					[description appendFormat:@"%@%s = (point) %@", separator, ivarName, NSStringFromPoint(NSPointFromCGPoint(*(CGPoint*)ivarLocation))];
+					[description appendFormat:@"%@%s = (point) %@", separator, ivarName, NSStringFromCGPoint(*(CGPoint*)ivarLocation)];
 					break;
 				}
 				else if(RMTypeEncodingCompare(ivarTypeEncoding, @encode(NSRange)) == 0)
