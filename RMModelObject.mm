@@ -397,6 +397,12 @@ static Method GetSetterMethod(Class const self, SEL const selector)
 	return class_getInstanceMethod(self, sel_registerName(buffer));
 }
 
+@interface RMModelObject ()
+
++ (Method)_assignmentAccessorForTypeEncoding:(const char* const)typeEncoding wantsSetterMethod:(BOOL)wantsSetterMethod;
+
+@end
+
 @implementation RMModelObject
 
 + (void)load
@@ -768,7 +774,7 @@ Class RMModelObjectInitializeDynamicClass(Class self)
 		Method getter = NULL;
 		if(class_getInstanceMethod(self, sel_registerName(getterName)) == NULL)
 		{
-			if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeAssign) getter = [self _assignmentAccessorForTypeEncoding:propertyTypeEncoding wantsSetterMethod:NO];
+			if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeAssign) getter = (Method)[self _assignmentAccessorForTypeEncoding:propertyTypeEncoding wantsSetterMethod:NO];
 			else if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeRetain) getter = class_getInstanceMethod(self, @selector(_modelObjectGetIdRetain));
 			else if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeCopy) getter = class_getInstanceMethod(self, @selector(_modelObjectGetIdCopy));
 			
@@ -776,7 +782,7 @@ Class RMModelObjectInitializeDynamicClass(Class self)
 		}
 			
 		Method setter = NULL;
-		if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeAssign) setter = [self _assignmentAccessorForTypeEncoding:propertyTypeEncoding wantsSetterMethod:YES];
+		if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeAssign) setter = (Method)[self _assignmentAccessorForTypeEncoding:propertyTypeEncoding wantsSetterMethod:YES];
 		else if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeRetain) setter = GetSetterMethod(self, @selector(_modelObjectSetIdRetain:));
 		else if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeCopy) setter = GetSetterMethod(self, @selector(_modelObjectSetIdCopy:));
 		
