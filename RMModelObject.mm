@@ -331,7 +331,7 @@ template<ObjCPropertyAssignmentMode assignmentMode, bool slowMode> void SetRawId
 	
 	// Uninitialised intentionally
 	NSString* propertyNameObject;
-	switch(slowMode)
+	switch(static_cast<int>(slowMode))
 	{
 		case true:
 		{
@@ -365,7 +365,7 @@ template<ObjCPropertyAssignmentMode assignmentMode, bool slowMode> void SetRawId
 	
 	objc_assign_ivar(value, self, ivar_getOffset(class_getInstanceVariable([self class], propertyName)));
 	
-	switch(slowMode)
+	switch(static_cast<int>(slowMode))
 	{
 		case true:
 			if([self respondsToSelector:@selector(propertyDidChange:from:to:)]) [(id<RMModelObjectPropertyChanging>)self propertyDidChange:propertyNameObject from:oldValue to:value];
