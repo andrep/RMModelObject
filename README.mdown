@@ -121,6 +121,13 @@ The rest of this document is a high-level overview about how those six
 main features work.
 
 
+Known Issues
+------------
+
+* On Mac OS X you will have to link against “ApplicationServices.framework”.
+* There currently is no support for compiling with ARC enabled.
+
+
 Implementation Overview
 -----------------------
 
