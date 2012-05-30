@@ -289,7 +289,7 @@ template<typename T> void SetRawValueSlow(id const self, SEL _cmd, T value)
 {
 	const char* const propertyName = PropertyNameFromSetterName([self class], _cmd);
 	
-	MOLog(@"-[%@ %s]: %s (%s)", NSStringFromClass([self class]), _cmd, propertyName, __PRETTY_FUNCTION__);
+	MOLog(@"-[%@ %@]: %s (%s)", NSStringFromClass([self class]), NSStringFromSelector(_cmd), propertyName, __PRETTY_FUNCTION__);
 
 	Ivar const ivar = class_getInstanceVariable([self class], propertyName);
 	T oldValue;
@@ -331,7 +331,7 @@ template<ObjCPropertyAssignmentMode assignmentMode, bool slowMode> void SetRawId
 	
 	// Uninitialised intentionally
 	NSString* propertyNameObject;
-	switch(slowMode)
+	switch(static_cast<int>(slowMode))
 	{
 		case true:
 		{
@@ -365,7 +365,7 @@ template<ObjCPropertyAssignmentMode assignmentMode, bool slowMode> void SetRawId
 	
 	objc_assign_ivar(value, self, ivar_getOffset(class_getInstanceVariable([self class], propertyName)));
 	
-	switch(slowMode)
+	switch(static_cast<int>(slowMode))
 	{
 		case true:
 			if([self respondsToSelector:@selector(propertyDidChange:from:to:)]) [(id<RMModelObjectPropertyChanging>)self propertyDidChange:propertyNameObject from:oldValue to:value];
@@ -685,12 +685,12 @@ static BOOL inline RMClassAddMethod(Class cls, SEL name, IMP imp, const char* ty
 {
 	if(imp == NULL)
 	{
-		NSLog(@"RMClassAddMethod() passed a NULL IMP for %s", name);
+		NSLog(@"RMClassAddMethod() passed a NULL IMP for %@", NSStringFromSelector(name));
 		return NO;
 	}
 	
 	const BOOL didAddMethod = class_addMethod(cls, name, imp, types);
-	if(!didAddMethod) NSLog(@"class_addMethod returned NO for `%s' (IMP=%p, typeEncoding=%s)", name, imp, types);
+	if(!didAddMethod) NSLog(@"class_addMethod returned NO for `%@' (IMP=%p, typeEncoding=%s)", NSStringFromSelector(name), imp, types);
 	
 	return didAddMethod;
 }
