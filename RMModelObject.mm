@@ -78,7 +78,7 @@ struct InSituCString
 	
 	inline InSituCString(const char* aCString)
 	: cString(aCString)
-	, length(strlen(aCString))
+	, length((unsigned)strlen(aCString))
 	{
 	}
 	
