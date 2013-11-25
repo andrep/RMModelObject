@@ -87,9 +87,9 @@ to write a full-fledged model object with full support for `NSCopying` and
     @property BOOL isDraft;
 
     @end
-    
+
     //
-    
+
     @implementation MyBlogEntry
 
     @dynamic title, postedDate, bodyText, tagNames, categoryNames, isDraft;
@@ -167,7 +167,7 @@ be instances of this dynamically generated class, which is named
 `Foo` class looks like
 
       RMModelObject    implements NSCopying, NSCoding, -isEqual: & hash
-            ^ 
+            ^
             |
            Foo
             ^
@@ -312,4 +312,3 @@ there's enough demand, maybe I'll move it to github some day.)
 > [Andre Pang](andre.pang@realmacsoftware.com)
 
 /* vim: set sts=4 expandtab */
-
