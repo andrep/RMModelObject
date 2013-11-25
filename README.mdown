@@ -1,6 +1,27 @@
 RMModelObject
 =============
 
+RMModelObject has been superceded by Mantle
+-------------------------------------------
+
+RMModelObject was written a long time ago by Objective-C standards,
+back in ~2006 when the iPhone didn't even exist. It was written for
+the Objective-C 1.0 32-bit runtime, and will not work properly for
+Objective-C 2.0.
+
+If you're looking for something with RMModelObject-like functionality
+that works on modern Objective-C runtimes, check out
+[Mantle](https://github.com/github/Mantle) and MTLModel! It basically
+does the same thing as RMModelObject, but works with today's far
+better Objective-C runtimes.
+
+On the other hand, if you _are_ stuck with the Objective-C 1.0 32-bit
+runtime for whatever reason, RMModelObject may still be useful for you.
+
+
+Introduction
+------------
+
 _RMModelObject_ is a class that makes writing model objects and [value
 objects](http://c2.com/cgi/wiki?ValueObject) in Cocoa a lot easier.  Let's walk
 through a short example: say you're writing a new blogging program, and want
