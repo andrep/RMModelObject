@@ -78,7 +78,7 @@ struct InSituCString
 	
 	inline InSituCString(const char* aCString)
 	: cString(aCString)
-	, length(strlen(aCString))
+	, length((unsigned)strlen(aCString))
 	{
 	}
 	
@@ -462,6 +462,9 @@ int RMTypeEncodingCompare(const char* lhs, const char* rhs)
 	return strippedLHS.compare(strippedRHS);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
+
 + (Method)_assignmentAccessorForTypeEncoding:(const char* const)typeEncoding wantsSetterMethod:(BOOL)wantsSetterMethod
 {
 	switch(wantsSetterMethod)
@@ -552,6 +555,8 @@ int RMTypeEncodingCompare(const char* lhs, const char* rhs)
 	
 	return NULL;
 }
+
+#pragma clang diagnostic pop
 
 #define DEFINE_PRIMITIVE_GETTER_METHOD(typeName, uppercasedTypeName) \
 - (typeName)_modelObjectGet ## uppercasedTypeName \
@@ -781,10 +786,15 @@ Class RMModelObjectInitializeDynamicClass(Class self)
 			RMClassAddMethod(dynamicClass, sel_registerName(getterName), method_getImplementation(getter), method_getTypeEncoding(getter));
 		}
 			
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
+		
 		Method setter = NULL;
 		if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeAssign) setter = (Method)[self _assignmentAccessorForTypeEncoding:propertyTypeEncoding wantsSetterMethod:YES];
 		else if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeRetain) setter = GetSetterMethod(self, @selector(_modelObjectSetIdRetain:));
 		else if(propertyAttributes.assignmentMode == ObjCPropertyAssignmentModeCopy) setter = GetSetterMethod(self, @selector(_modelObjectSetIdCopy:));
+		
+#pragma clang diagnostic pop
 		
 		RMClassAddMethod(dynamicClass, sel_registerName(setterName), method_getImplementation(setter), method_getTypeEncoding(setter));
 		
